@@ -15,7 +15,7 @@ const app = express();
 // CORS FIX (STEP 1)
 // ========================
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:5500", "http://127.0.0.1:5500"],
+  origin: ["https://ai-resume-analyzer-two-rho.vercel.app", "http://localhost:5500", "http://127.0.0.1:5500"],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
