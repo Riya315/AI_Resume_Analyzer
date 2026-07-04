@@ -8,7 +8,7 @@
      5. Improvement Suggestions
    ============================================================= */
 
-const API_URL = "https://ai-resume-analyzer-backend.onrender.com/api/resume/analyze"; // Updated to Render backend
+const API_URL = "http://localhost:5001/api/resume/analyze"; // Local backend
 
 /* ── DOM REFERENCES ─────────────────────────────────────── */
 // Upload section
