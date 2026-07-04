@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Upload your resume and get an instant AI-powered analysis including skills, gaps, and improvement suggestions.">
+    <title>AI Resume Analyzer</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ===== NAVBAR ===== -->
+    <header class="navbar">
+        <div class="brand">
+            <div class="logo-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <div class="brand-text">
+                <h1>AI Resume Analyzer</h1>
+                <span class="brand-sub">Powered by Google Gemini</span>
+            </div>
+        </div>
+        <div class="nav-right">
+            <button id="themeToggleBtn" class="btn-theme-toggle" aria-label="Toggle dark mode" title="Toggle Theme">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== MAIN LAYOUT ===== -->
+    <div class="page-layout">
+
+        <!-- ===== HISTORY SIDEBAR ===== -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span><i class="fa-solid fa-clock-rotate-left"></i> History</span>
+                <button id="clearHistoryBtn" class="btn-clear-history" title="Clear history">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="empty-history">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <p>No analyses yet</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="main-content">
+
+            <!-- ========== UPLOAD SECTION ========== -->
+            <section id="uploadSection" class="section-panel">
+                <div class="upload-header">
+                    <h2>Upload Your Resume</h2>
+                    <p>Upload a PDF, DOC, or DOCX file (max 5MB) to receive an AI-generated analysis with skills breakdown, gaps, and suggestions.</p>
+                </div>
+
+                <form id="analyzeForm">
+                    <!-- DROP ZONE -->
+                    <div class="drop-zone" id="dropZone">
+                        <input type="file" id="resumeFile" accept=".pdf,.doc,.docx" class="file-input" aria-label="Resume file upload">
+                        <!-- Default state -->
+                        <div class="drop-default" id="dropDefault">
+                            <div class="drop-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                            <h3>Drag & drop your resume here</h3>
+                            <p>or <span class="link-text">click to browse</span></p>
+                            <p class="drop-hint">PDF, DOC, DOCX &nbsp;·&nbsp; Max 5 MB</p>
+                        </div>
+                        <!-- File selected state -->
+                        <div class="drop-selected" id="dropSelected" style="display:none;">
+                            <i class="fa-solid fa-file-pdf file-icon-preview" id="fileIconPreview"></i>
+                            <div class="file-info">
+                                <span class="file-name-display" id="fileNameDisplay">resume.pdf</span>
+                                <span class="file-size-display" id="fileSizeDisplay">2.1 MB</span>
+                            </div>
+                            <button type="button" id="btnRemoveFile" class="btn-remove" title="Remove file" aria-label="Remove selected file">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- FILE VALIDATION ERROR (inline) -->
+                    <div class="inline-error" id="fileValidationError" style="display:none;">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span id="fileValidationMessage">Invalid file.</span>
+                    </div>
+
+                    <!-- ANALYZE BUTTON -->
+                    <button type="submit" id="analyzeBtn" class="btn-analyze">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i>
+                        <span id="analyzeBtnText">Analyze Resume</span>
+                    </button>
+                </form>
+            </section>
+
+            <!-- ========== LOADING STATE ========== -->
+            <section id="loadingSection" class="section-panel loading-panel" style="display:none;" aria-live="polite">
+                <div class="loading-inner">
+                    <div class="spinner-wrap">
+                        <div class="spinner-ring"></div>
+                        <div class="spinner-ring delay"></div>
+                    </div>
+                    <h2 id="loadingTitle">Uploading resume...</h2>
+                    <p id="loadingSubtitle" class="loading-sub">Sending your file to the server for extraction.</p>
+                    <!-- Progress bar -->
+                    <div class="progress-track">
+                        <div class="progress-fill" id="progressFill" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <p class="loading-step-label" id="loadingStepLabel">Step 1 of 3</p>
+                </div>
+            </section>
+
+            <!-- ========== ERROR STATE ========== -->
+            <section id="errorSection" class="section-panel error-panel" style="display:none;" role="alert">
+                <div class="error-inner">
+                    <div class="error-icon-wrap"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <h2>Analysis Failed</h2>
+                    <p id="errorMessage" class="error-msg-text">Something went wrong. Please try again.</p>
+                    <!-- Error type badge -->
+                    <span class="error-type-badge" id="errorTypeBadge">Server Error</span>
+                    <div class="error-actions">
+                        <button id="retryBtn" class="btn-retry">
+                            <i class="fa-solid fa-rotate-left"></i> Try Again
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== RESULTS: AI ANALYSIS ========== -->
+            <section id="resultsSection" class="results-section" style="display:none;">
+
+                <!-- Results header bar -->
+                <div class="results-header">
+                    <div class="results-title-area">
+                        <i class="fa-solid fa-circle-check success-check"></i>
+                        <div>
+                            <h2>Analysis Complete</h2>
+                            <p class="results-filename" id="resultsFilename">resume.pdf</p>
+                        </div>
+                    </div>
+                    <div class="results-actions">
+                        <button id="copyAnalysisBtn" class="btn-action" title="Copy analysis to clipboard">
+                            <i class="fa-solid fa-copy"></i> Copy
+                        </button>
+                        <button id="downloadPdfBtn" class="btn-action btn-action-primary" title="Download PDF report">
+                            <i class="fa-solid fa-file-pdf"></i> Download PDF
+                        </button>
+                        <button id="newAnalysisBtn" class="btn-action btn-action-outline" title="Analyze a new resume">
+                            <i class="fa-solid fa-plus"></i> New Analysis
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Score bar -->
+                <div class="score-banner" id="scoreBanner">
+                    <div class="score-pill">
+                        <span class="score-pill-label">Resume Score</span>
+                        <span class="score-pill-value" id="scoreResumeVal">–</span>
+                        <span class="score-pill-unit">/10</span>
+                        <div class="score-pill-bar">
+                            <div class="score-pill-fill" id="scoreResumeFill" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div class="score-divider"></div>
+                    <div class="score-pill">
+                        <span class="score-pill-label">ATS Score</span>
+                        <span class="score-pill-value" id="scoreAtsVal">–</span>
+                        <span class="score-pill-unit">/10</span>
+                        <div class="score-pill-bar">
+                            <div class="score-pill-fill ats" id="scoreAtsFill" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div class="score-verdict" id="scoreVerdict">Calculating...</div>
+                </div>
+
+                <!-- ========== PERFORMANCE METRICS ========== -->
+                <section id="performanceSection" class="section-panel" style="display:none;">
+                    <h3>Performance Metrics</h3>
+                    <ul class="performance-list">
+                        <li>LCP: <span id="lcpValue">–</span> s</li>
+                        <li>CLS: <span id="clsValue">–</span></li>
+                        <li>INP: <span id="inpValue">–</span> ms</li>
+                    </ul>
+                </section>
+
+                <!-- ===== AI ANALYSIS SECTIONS ===== -->
+                <div class="analysis-sections" id="pdfReportContent">
+
+                    <!-- SECTION 1: RESUME SUMMARY -->
+                    <div class="analysis-card" id="card-summary">
+                        <div class="analysis-card-header">
+                            <div class="card-icon-wrap icon-purple">
+                                <i class="fa-solid fa-id-card"></i>
+                            </div>
+                            <div>
+                                <h3>Resume Summary</h3>
+                                <p class="card-desc">AI-generated overview of your professional profile</p>
+                            </div>
+                        </div>
+                        <div class="analysis-card-body">
+                            <p id="summaryText" class="narrative-text"></p>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: TECHNICAL SKILLS -->
+                    <div class="analysis-card" id="card-tech-skills">
+                        <div class="analysis-card-header">
+                            <div class="card-icon-wrap icon-blue">
+                                <i class="fa-solid fa-laptop-code"></i>
+                            </div>
+                            <div>
+                                <h3>Technical Skills</h3>
+                                <p class="card-desc">Programming languages, frameworks, and tools identified in your resume</p>
+                            </div>
+                        </div>
+                        <div class="analysis-card-body">
+                            <div class="skills-cloud" id="techSkillsCloud"></div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3: SOFT SKILLS -->
+                    <div class="analysis-card" id="card-soft-skills">
+                        <div class="analysis-card-header">
+                            <div class="card-icon-wrap icon-teal">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div>
+                                <h3>Soft Skills</h3>
+                                <p class="card-desc">Professional qualities, interpersonal skills, and methodologies</p>
+                            </div>
+                        </div>
+                        <div class="analysis-card-body">
+                            <div class="skills-cloud soft" id="softSkillsCloud"></div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 4: MISSING SKILLS -->
+                    <div class="analysis-card" id="card-missing-skills">
+                        <div class="analysis-card-header">
+                            <div class="card-icon-wrap icon-orange">
+                                <i class="fa-solid fa-circle-minus"></i>
+                            </div>
+                            <div>
+                                <h3>Missing Skills</h3>
+                                <p class="card-desc">Important skills or keywords absent from your resume</p>
+                            </div>
+                        </div>
+                        <div class="analysis-card-body">
+                            <ul class="missing-skills-list" id="missingSkillsList"></ul>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 5: IMPROVEMENT SUGGESTIONS -->
+                    <div class="analysis-card" id="card-suggestions">
+                        <div class="analysis-card-header">
+                            <div class="card-icon-wrap icon-green">
+                                <i class="fa-solid fa-lightbulb"></i>
+                            </div>
+                            <div>
+                                <h3>Improvement Suggestions</h3>
+                                <p class="card-desc">Actionable steps to strengthen your resume and pass ATS screeners</p>
+                            </div>
+                        </div>
+                        <div class="analysis-card-body">
+                            <ol class="suggestions-list" id="suggestionsList"></ol>
+                        </div>
+                    </div>
+
+                </div><!-- end .analysis-sections -->
+            </section>
+            <!-- ========== END RESULTS ========== -->
+
+        </main>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
