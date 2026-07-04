@@ -1,6 +1,11 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+require("dotenv").config();
+
+console.log("PORT =", process.env.PORT);
+console.log("GROQ_API_KEY exists =", !!process.env.GROQ_API_KEY);
+console.log("GROQ_API_KEY prefix =", process.env.GROQ_API_KEY?.substring(0, 8));
 
 const resumeRoutes = require("./routes/resumeRoutes");
 

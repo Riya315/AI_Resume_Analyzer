@@ -8,7 +8,7 @@
      5. Improvement Suggestions
    ============================================================= */
 
-const API_URL = "http://localhost:5001/api/resume/analyze";
+const API_URL = "/api/resume/analyze";
 
 /* ── DOM REFERENCES ─────────────────────────────────────── */
 // Upload section
